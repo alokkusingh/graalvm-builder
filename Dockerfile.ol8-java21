@@ -21,17 +21,15 @@ RUN fc-cache -f -v
 
 ARG GRAALVM_VERSION=23.1.2
 ARG JAVA_VERSION=java21
-ARG GRAALVM_PKG=https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-21.0.2/graalvm-community-jdk-21.0.2_macos-aarch64_bin.tar.gz
-ARG TARGETPLATFORM
+ARG GRAALVM_PKG=https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-21.0.2/graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz
 
 ENV LANG=en_US.UTF-8 \
-    JAVA_HOME=/opt/graalvm-ce-$JAVA_VERSION-$GRAALVM_VERSION
+    JAVA_HOME=/opt/graalvm-community-openjdk-21.0.2+13.1
 
-COPY gu-wrapper.sh /usr/local/bin/gu
+# Note: gu is no longer needed as native-image is already part of graalvm tar (above)
+#COPY gu-wrapper.sh /usr/local/bin/gu
 RUN set -eux \
-    && if [ "$TARGETPLATFORM" == "linux/amd64" ]; then GRAALVM_PKG=${GRAALVM_PKG/GRAALVM_ARCH/linux-amd64}; fi \
-    && if [ "$TARGETPLATFORM" == "linux/arm64" ]; then GRAALVM_PKG=${GRAALVM_PKG/GRAALVM_ARCH/linux-aarch64}; fi \
-    && curl --fail --silent --location --retry 3 ${GRAALVM_PKG} \
+    && curl --fail --location --retry 3 ${GRAALVM_PKG} \
     | gunzip | tar x -C /opt/ \
     # Set alternative links
     && mkdir -p "/usr/java" \
@@ -41,11 +39,8 @@ RUN set -eux \
     base="$(basename "$bin")"; \
     [ ! -e "/usr/bin/$base" ]; \
     alternatives --install "/usr/bin/$base" "$base" "$bin" 20000; \
-    done \
-    && chmod +x /usr/local/bin/gu
-
-
-#RUN apk add --no-cache curl tar bash procps
+    done
+    #&& chmod +x /usr/local/bin/gu
 
 # Downloading and installing Maven
 # 1- Define a constant with the version of maven you want to install
